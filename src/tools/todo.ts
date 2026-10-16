@@ -29,10 +29,16 @@ const TodoOperationSchema = Type.Union([
 
 const TodoPhaseInputSchema = Type.Object({
 	phase: Type.String({ description: "Phase name" }),
-	items: Type.Array(Type.String({ description: "Task content" }), {
-		description: "Tasks for this phase",
-		minItems: 1,
-	}),
+	items: Type.Array(
+		Type.Union([
+			Type.String({ description: "Task content" }),
+			Type.Object({ content: Type.String(), guidance: Type.Optional(Type.String()) }),
+		]),
+		{
+			description: "Tasks for this phase",
+			minItems: 1,
+		},
+	),
 });
 
 export const TODO_PARAMS_SCHEMA = Type.Object({
@@ -42,7 +48,15 @@ export const TODO_PARAMS_SCHEMA = Type.Object({
 	phase: Type.Optional(Type.String({ description: "Phase name" })),
 	// Keep this unconstrained at the schema boundary. init and append return
 	// operation-specific errors, while unrelated operations may ignore it.
-	items: Type.Optional(Type.Array(Type.String({ description: "Task content" }), { description: "Tasks to append" })),
+	items: Type.Optional(
+		Type.Array(
+			Type.Union([
+				Type.String({ description: "Task content" }),
+				Type.Object({ content: Type.String(), guidance: Type.Optional(Type.String()) }),
+			]),
+			{ description: "Tasks to append" },
+		),
+	),
 });
 
 type TodoAccessors = {
@@ -91,7 +105,10 @@ export function registerTodoTool(pi: ExtensionAPI, accessors: TodoAccessors): vo
 
 			const details: TodoToolDetails = {
 				op: params.op,
-				phases: clonePhases(effective),
+				phases: clonePhases(effective).map((phase) => ({
+					...phase,
+					tasks: phase.tasks.map(({ supervisorContext: _private, ...task }) => task),
+				})),
 				storage: ctx.sessionManager.getSessionFile() ? "session" : "memory",
 			};
 			if (completedTasks.length > 0) details.completedTasks = completedTasks;
@@ -106,7 +123,19 @@ export function registerTodoTool(pi: ExtensionAPI, accessors: TodoAccessors): vo
 			return renderTodoCall(args, theme);
 		},
 		renderResult(result, options, theme, context) {
-			return renderTodoResult(result, options, theme, context.args, isTodoToolError(result) || context.isError);
+			const currentPhases = accessors.getCurrentPhases();
+			return renderTodoResult(
+				{
+					...result,
+					details: result.details
+						? { ...result.details, phases: currentPhases.length > 0 ? currentPhases : result.details.phases }
+						: result.details,
+				},
+				options,
+				theme,
+				context.args,
+				isTodoToolError(result) || context.isError,
+			);
 		},
 	};
 

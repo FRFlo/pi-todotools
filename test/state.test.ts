@@ -52,6 +52,40 @@ describe("todo state", () => {
 		expect(findPhaseByName(phases, "Missing phase")).toBeUndefined();
 	});
 
+	it("loads legacy v2 tasks and preserves optional fields while cloning", () => {
+		const phases = getLatestPhasesFromBranchEntries([
+			{
+				type: "custom",
+				customType: TODO_STATE_ENTRY_TYPE,
+				data: {
+					schema: "v2",
+					phases: [
+						{
+							name: "Plan",
+							tasks: [
+								{
+									content: "Task",
+									status: "pending",
+									guidance: "Do carefully",
+									supervisorContext: "Internal note",
+								},
+							],
+						},
+					],
+				},
+			},
+		]);
+		expect(phases[0]?.tasks[0]).toEqual({
+			content: "Task",
+			status: "pending",
+			guidance: "Do carefully",
+			supervisorContext: "Internal note",
+		});
+		const copy = clonePhases(phases);
+		expect(copy).toEqual(phases);
+		expect(copy[0]?.tasks[0]).not.toBe(phases[0]?.tasks[0]);
+	});
+
 	it("clones phases deeply so mutations never leak into snapshots", () => {
 		// when
 		const copy = clonePhases([foundation]);

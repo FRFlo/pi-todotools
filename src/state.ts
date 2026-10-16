@@ -10,6 +10,8 @@ export type TodoOperation = "init" | "start" | "done" | "rm" | "drop" | "append"
 export type TodoItem = {
 	content: string;
 	status: TodoStatus;
+	guidance?: string;
+	supervisorContext?: string;
 };
 
 export type TodoPhase = {
@@ -39,7 +41,7 @@ export const DEFAULT_INIT_PHASE = "Tasks";
 
 export type TodoPhaseInput = {
 	phase: string;
-	items: string[];
+	items: Array<string | { content: string; guidance?: string }>;
 };
 
 export type TodoOpEntry = {
@@ -47,7 +49,7 @@ export type TodoOpEntry = {
 	list?: TodoPhaseInput[];
 	task?: string;
 	phase?: string;
-	items?: string[];
+	items?: Array<string | { content: string; guidance?: string }>;
 };
 
 export type TaskHit = {
@@ -73,7 +75,16 @@ function parseTodoStatus(value: unknown): TodoStatus | undefined {
 function parseTodoItem(value: unknown, options?: { lenient?: boolean }): TodoItem | undefined {
 	if (!isRecord(value) || typeof value["content"] !== "string") return undefined;
 	const status = parseTodoStatus(value["status"]) ?? (options?.lenient ? "pending" : undefined);
-	return status ? { content: value["content"], status } : undefined;
+	return status
+		? {
+				content: value["content"],
+				status,
+				...(typeof value["guidance"] === "string" ? { guidance: value["guidance"] } : {}),
+				...(typeof value["supervisorContext"] === "string"
+					? { supervisorContext: value["supervisorContext"] }
+					: {}),
+			}
+		: undefined;
 }
 
 function parseTodoPhase(value: unknown): TodoPhase | undefined {
@@ -134,7 +145,7 @@ export function findPhaseByName(phases: TodoPhase[], name: string): TodoPhase | 
 }
 
 export function cloneTask(task: TodoItem): TodoItem {
-	return { content: task.content, status: task.status };
+	return { ...task };
 }
 
 export function clonePhases(phases: readonly TodoPhase[]): TodoPhase[] {

@@ -56,6 +56,24 @@ describe("todo rendering", () => {
 		).toBeUndefined();
 	});
 
+	it("shows guidance and supervisor context in the human sidebar", () => {
+		expect(
+			getTodoWidgetLines([
+				{
+					name: "Plan",
+					tasks: [
+						{
+							content: "Task",
+							status: "in_progress",
+							guidance: "Do carefully",
+							supervisorContext: "Review privately",
+						},
+					],
+				},
+			]),
+		).toEqual(["Todo", "Plan", "[•] Task", "  Guidance: Do carefully", "  Supervisor: Review privately"]);
+	});
+
 	it("builds result lines across all phases", () => {
 		// given
 		const phases: TodoPhase[] = [

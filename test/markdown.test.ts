@@ -8,6 +8,25 @@ import {
 import type { TodoPhase } from "../src/state.js";
 
 describe("todo markdown round-trip", () => {
+	it("never exports guidance or private supervisor context", () => {
+		const markdown = phasesToMarkdown([
+			{
+				name: "Plan",
+				tasks: [
+					{
+						content: "Task",
+						status: "pending",
+						guidance: "visible guidance",
+						supervisorContext: "private secret",
+					},
+				],
+			},
+		]);
+		expect(markdown).toContain("Task");
+		expect(markdown).not.toContain("visible guidance");
+		expect(markdown).not.toContain("private secret");
+	});
+
 	it("renders an empty list as the default phase heading", () => {
 		expect(phasesToMarkdown([])).toBe("# Tasks\n");
 		expect(DEFAULT_TODO_MARKDOWN_FILE).toBe("TODO.md");

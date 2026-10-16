@@ -160,6 +160,53 @@ describe("todo tool execution", () => {
 		expect(text).toContain("Remaining items (3):");
 	});
 
+	it("accepts guidance task objects but redacts supervisor context from model results", async () => {
+		const { tool, getPhases } = captureTodoTool();
+		const result = await tool.execute(
+			"call-guidance",
+			{ op: "init", list: [{ phase: "Plan", items: [{ content: "Private task", guidance: "Use the safe path" }] }] },
+			undefined,
+			undefined,
+			memoryCtx(),
+		);
+		expect(getPhases()[0]?.tasks[0]).toEqual({
+			content: "Private task",
+			status: "in_progress",
+			guidance: "Use the safe path",
+		});
+		expect(JSON.stringify(result)).toContain("Use the safe path");
+		expect(JSON.stringify(result)).not.toContain("supervisorContext");
+		const privatePhases: TodoPhase[] = [
+			{
+				name: "Plan",
+				tasks: [
+					{
+						content: "Private task",
+						status: "in_progress",
+						guidance: "Guide",
+						supervisorContext: "secret supervisor note",
+					},
+				],
+			},
+		];
+		const privateTool = captureTodoTool(privatePhases);
+		const view = await privateTool.tool.execute("call-view", { op: "view" }, undefined, undefined, memoryCtx());
+		expect(JSON.stringify(view)).not.toContain("secret supervisor note");
+		expect(JSON.stringify(view)).not.toContain("supervisorContext");
+		await privateTool.tool.execute(
+			"call-append",
+			{ op: "append", phase: "Plan", items: [{ content: "Appended", guidance: "Append guidance" }] },
+			undefined,
+			undefined,
+			memoryCtx(),
+		);
+		expect(privateTool.getPhases()[0]?.tasks[1]).toEqual({
+			content: "Appended",
+			status: "pending",
+			guidance: "Append guidance",
+		});
+	});
+
 	it("reports session storage when a session file exists", async () => {
 		// given
 		const { tool } = captureTodoTool();

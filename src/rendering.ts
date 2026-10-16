@@ -42,7 +42,11 @@ export function getTodoWidgetLines(phases: readonly TodoPhase[]): string[] | und
 	return [
 		"Todo",
 		sanitizeTodoText(activePhase.name),
-		...activePhase.tasks.map((todo) => `${getTodoMarker(todo.status)} ${sanitizeTodoText(todo.content)}`),
+		...activePhase.tasks.flatMap((todo) => [
+			`${getTodoMarker(todo.status)} ${sanitizeTodoText(todo.content)}`,
+			...(todo.guidance ? [`  Guidance: ${sanitizeTodoText(todo.guidance)}`] : []),
+			...(todo.supervisorContext ? [`  Supervisor: ${sanitizeTodoText(todo.supervisorContext)}`] : []),
+		]),
 	];
 }
 
@@ -52,7 +56,11 @@ export function getTodoResultLines(phases: readonly TodoPhase[]): string[] {
 		`${tasks.filter(isIncompleteTodo).length} todos`,
 		...phases.flatMap((phase) => [
 			`${sanitizeTodoText(phase.name)}:`,
-			...phase.tasks.map((todo) => `${getTodoMarker(todo.status)} ${sanitizeTodoText(todo.content)}`),
+			...phase.tasks.flatMap((todo) => [
+				`${getTodoMarker(todo.status)} ${sanitizeTodoText(todo.content)}`,
+				...(todo.guidance ? [`  Guidance: ${sanitizeTodoText(todo.guidance)}`] : []),
+				...(todo.supervisorContext ? [`  Supervisor: ${sanitizeTodoText(todo.supervisorContext)}`] : []),
+			]),
 		]),
 	];
 }

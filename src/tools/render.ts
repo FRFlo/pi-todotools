@@ -93,7 +93,7 @@ function formatPhaseSummary(phase: TodoPhase, index: number, theme: Theme): stri
 }
 
 function formatTaskLine(task: TodoPhase["tasks"][number], theme: Theme): string {
-	const line = `${getTodoMarker(task.status)} ${sanitizeTodoText(task.content)}`;
+	const line = `${getTodoMarker(task.status)} ${sanitizeTodoText(task.content)}${task.guidance ? ` — Guidance: ${sanitizeTodoText(task.guidance)}` : ""}${task.supervisorContext ? ` — Supervisor: ${sanitizeTodoText(task.supervisorContext)}` : ""}`;
 	switch (task.status) {
 		case "completed":
 			return theme.fg("dim", theme.strikethrough(line));

@@ -132,7 +132,8 @@ export function initPhases(entry: TodoOpEntry, errors: string[]): TodoPhase[] {
 		if (seenPhases.has(listEntry.phase)) errors.push(`Duplicate phase "${listEntry.phase}" in init list`);
 		seenPhases.add(listEntry.phase);
 		if (listEntry.items.length === 0) errors.push(`Phase "${listEntry.phase}" has no tasks in init list`);
-		for (const content of listEntry.items) {
+		for (const item of listEntry.items) {
+			const content = typeof item === "string" ? item : item.content;
 			if (seenTasks.has(content)) errors.push(`Duplicate task "${content}" in init list`);
 			seenTasks.add(content);
 		}
@@ -140,7 +141,15 @@ export function initPhases(entry: TodoOpEntry, errors: string[]): TodoPhase[] {
 
 	return list.map((listEntry) => ({
 		name: listEntry.phase,
-		tasks: listEntry.items.map((content) => ({ content, status: "pending" as const })),
+		tasks: listEntry.items.map((item) =>
+			typeof item === "string"
+				? { content: item, status: "pending" as const }
+				: {
+						content: item.content,
+						status: "pending" as const,
+						...(item.guidance !== undefined ? { guidance: item.guidance } : {}),
+					},
+		),
 	}));
 }
 
@@ -156,7 +165,8 @@ export function appendItems(phases: TodoPhase[], entry: TodoOpEntry, errors: str
 
 	const seen = new Set<string>();
 	let hasDuplicate = false;
-	for (const content of entry.items) {
+	for (const item of entry.items) {
+		const content = typeof item === "string" ? item : item.content;
 		if (seen.has(content) || findTaskByContent(phases, content)) {
 			errors.push(`Task "${content}" already exists`);
 			hasDuplicate = true;
@@ -171,7 +181,16 @@ export function appendItems(phases: TodoPhase[], entry: TodoOpEntry, errors: str
 		phases.push(phase);
 	}
 
-	for (const content of entry.items) phase.tasks.push({ content, status: "pending" });
+	for (const item of entry.items)
+		phase.tasks.push(
+			typeof item === "string"
+				? { content: item, status: "pending" }
+				: {
+						content: item.content,
+						status: "pending",
+						...(item.guidance !== undefined ? { guidance: item.guidance } : {}),
+					},
+		);
 	return phases;
 }
 

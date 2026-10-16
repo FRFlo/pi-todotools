@@ -12,17 +12,18 @@ Completing tasks out of phase order can move this pointer **back** to an earlier
 
 | op | Required fields | Effect |
 |---|---|---|
-| init | list: [{phase, items: string[]}] | Initialize full list (replaces existing) |
-| init | items: string[] | Flattened single-phase init |
+| init | list: [{phase, items: (string | {content, guidance?})[]}] | Initialize full list (replaces existing) |
+| init | items: (string | {content, guidance?})[] | Flattened single-phase init |
 | start | task | Mark in progress |
 | done | task or phase | Mark completed |
 | drop | task or phase | Mark abandoned |
 | rm | task or phase (optional) | Remove task or phase; omit both to clear |
-| append | phase, items: string[] | Append tasks to phase; lazily creates phase |
+| append | phase, items: (string | {content, guidance?})[] | Append tasks to phase; lazily creates phase |
 | view | — | Read-only: echo list |
 
 ## Anatomy
 - **Task content**: 5–10 words; what, not how. Unique identifier.
+- **Guidance**: optional worker-facing requirements or constraints for that task.
 - **Phase name**: short noun phrase (e.g. Foundation, Auth, Verification). Unique identifier. NEVER prefix 1., A), Phase 1:.
 
 ## Rules
