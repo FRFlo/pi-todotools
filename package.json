@@ -4,13 +4,13 @@
 	"description": "Phased, op-based todo tool extension for the pi coding agent. Registers a single todo tool (init/start/done/drop/rm/append/view), persistent phased task state, sidebar rendering, and task-management prompt guidance.",
 	"type": "module",
 	"license": "MIT",
-	"homepage": "https://github.com/code-yeongyu/pi-todotools",
+	"homepage": "https://github.com/FRFlo/pi-todotools",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/code-yeongyu/pi-todotools.git"
+		"url": "git+https://github.com/FRFlo/pi-todotools.git"
 	},
 	"bugs": {
-		"url": "https://github.com/code-yeongyu/pi-todotools/issues"
+		"url": "https://github.com/FRFlo/pi-todotools/issues"
 	},
 	"keywords": [
 		"pi",
